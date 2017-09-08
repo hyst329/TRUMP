@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTabPane?>
+<?import com.jfoenix.controls.JFXTreeTableColumn?>
+<?import com.jfoenix.controls.JFXTreeTableView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox prefHeight="100.0" prefWidth="200.0">
+         <children>
+            <VBox>
+               <children>
+                  <Label fx:id="posLabel" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="123456 / 567890" textAlignment="CENTER">
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </Label>
+                  <Label fx:id="nameLabel" layoutX="10.0" layoutY="10.0" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="test.mid" textAlignment="CENTER" textOverrun="CENTER_ELLIPSIS">
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </Label>
+                  <Label fx:id="timeLabel" layoutX="10.0" layoutY="60.0" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="1:23.4 / 5:06.789" textAlignment="CENTER">
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </Label>
+                  <Label fx:id="bpmLabel" layoutX="10.0" layoutY="84.0" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="BPM: 120.0" textAlignment="CENTER">
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </Label>
+               </children>
+            </VBox>
+         </children></HBox>
+      <JFXTabPane VBox.vgrow="ALWAYS">
+         <tabs>
+            <Tab text="MIDI">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <VBox layoutX="10.0" layoutY="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                           <children>
+                              <JFXTreeTableView fx:id="channelsTable" currentItemsCount="16">
+                                 <columns>
+                                    <JFXTreeTableColumn fx:id="channelsNumberColumn" prefWidth="75.0" text="Channel" />
+                                    <JFXTreeTableColumn fx:id="channelsPatchColumn" prefWidth="75.0" text="Patch" />
+                                    <JFXTreeTableColumn fx:id="channelsBankColumn" prefWidth="75.0" text="Bank" />
+                                    <JFXTreeTableColumn fx:id="channelsInstrumentColumn" prefWidth="75.0" text="Instrument" />
+                                 </columns>
+                              </JFXTreeTableView>
+                           </children>
+                        </VBox>
+                     </children></AnchorPane>
+              </content>
+            </Tab>
+            <Tab text="Output">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
+            <Tab text="Playlist">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <VBox layoutX="10.0" layoutY="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                           <children>
+                              <HBox prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <JFXButton onAction="#playlistAddFiles" text="Add Files" />
+                                    <JFXButton text="Add Folder" />
+                                    <JFXButton text="New List" />
+                                    <JFXButton text="Load List" />
+                                    <JFXButton text="Save List" />
+                                 </children>
+                                 <opaqueInsets>
+                                    <Insets />
+                                 </opaqueInsets>
+                              </HBox>
+                              <JFXTreeTableView fx:id="playlistTable" prefHeight="400.0" prefWidth="664.0">
+                                 <columns>
+                                    <JFXTreeTableColumn fx:id="playlistPosColumn" prefWidth="75.0" text="Pos." />
+                                    <JFXTreeTableColumn fx:id="playlistFilenameColumn" prefWidth="200.0" text="File name" />
+                                    <JFXTreeTableColumn fx:id="playlistNameColumn" prefWidth="200.0" text="Name" />
+                                    <JFXTreeTableColumn fx:id="playlistDurColumn" prefWidth="75.0" text="Duration" />
+                                 </columns>
+                              </JFXTreeTableView>
+                           </children>
+                        </VBox>
+                     </children>
+                  </AnchorPane>
+              </content>
+            </Tab>
+         </tabs>
+      </JFXTabPane>
+   </children>
+</VBox>
