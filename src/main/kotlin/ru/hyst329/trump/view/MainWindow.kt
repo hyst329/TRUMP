@@ -1,15 +1,15 @@
 package ru.hyst329.trump.view
 
+import com.beust.klaxon.*
+import com.jfoenix.controls.JFXSlider
 import com.jfoenix.controls.JFXTreeTableColumn
 import com.jfoenix.controls.JFXTreeTableView
 import com.jfoenix.controls.RecursiveTreeItem
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject
-import javafx.animation.Timeline
 import javafx.application.Platform
 import javafx.beans.property.ReadOnlyObjectWrapper
-import javafx.beans.value.ObservableValue
-import javafx.collections.ObservableList
-import javafx.event.EventHandler
+import javafx.scene.control.Alert
+import javafx.scene.control.ButtonType
 import javafx.scene.control.Label
 import javafx.scene.layout.VBox
 import javafx.util.Callback
@@ -17,19 +17,22 @@ import ru.hyst329.trump.logic.ChannelData
 import tornadofx.*
 import javax.sound.midi.*
 import javafx.scene.control.TreeTableColumn
-import javafx.scene.input.MouseEvent
+import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import ru.hyst329.trump.logic.PlaylistEntry
 import ru.hyst329.trump.logic.humanReadableDuration
 import java.io.File
-import java.io.InputStream
 import javafx.util.Duration
+import javafx.util.StringConverter
 import ru.hyst329.trump.logic.SimplePlayer
+import java.io.FileWriter
+import java.nio.file.Files
 import java.util.*
+import kotlin.streams.toList
 
 
 class MainWindow : View("My View") {
-    override val root: VBox by fxml()
+    override val root: VBox by fxml(hasControllerAttribute = true)
     val channelsTable: JFXTreeTableView<ChannelData> by fxid()
     val playlistTable: JFXTreeTableView<PlaylistEntry> by fxid()
     val channelsNumberColumn: JFXTreeTableColumn<ChannelData, Int> by fxid()
@@ -40,19 +43,42 @@ class MainWindow : View("My View") {
     val playlistFilenameColumn: JFXTreeTableColumn<PlaylistEntry, String> by fxid()
     val playlistNameColumn: JFXTreeTableColumn<PlaylistEntry, String> by fxid()
     val playlistDurColumn: JFXTreeTableColumn<PlaylistEntry, String> by fxid()
+    val keySlider: JFXSlider by fxid()
+    val tempoSlider: JFXSlider by fxid()
+    val volumeSlider: JFXSlider by fxid()
     val posLabel: Label by fxid()
     val nameLabel: Label by fxid()
     val timeLabel: Label by fxid()
     val bpmLabel: Label by fxid()
     val channels = List(16, { i -> ChannelData(i + 1) }).observable()
     val playlist = mutableListOf<PlaylistEntry>().observable()
-    var sequencer: Sequencer = MidiSystem.getSequencer(false) //MidiSystem.getMidiDevice(MidiSystem.getMidiDeviceInfo()[5]) as Sequencer
-    val player = SimplePlayer(14)
-    val chooser = FileChooser()
+    val player = SimplePlayer(12)
+    val fileChooser = FileChooser()
+    val playlistChooser = FileChooser()
+    val directoryChooser = DirectoryChooser()
     val updateTimer: Timer = Timer(true)
 
     init {
-        //sequencer.transmitter.receiver = MidiSystem.getMidiDevice(MidiSystem.getMidiDeviceInfo()[12]).receiver
+        keySlider.labelFormatter = (object : StringConverter<Double>() {
+            override fun toString(`object`: Double?): String {
+                return "%+1d".format(`object`?.toInt() ?: 0)
+            }
+
+            override fun fromString(string: String?): Double {
+                return string?.toDouble() ?: 0.0
+            }
+        })
+
+        tempoSlider.labelFormatter = (object : StringConverter<Double>() {
+            override fun toString(`object`: Double?): String {
+                return "\u00d7%4.2f".format(Math.pow(2.0, `object` ?: 0.0))
+            }
+
+            override fun fromString(string: String?): Double {
+                return Math.log(string?.toDouble() ?: 0.0)  / Math.log(2.0)
+            }
+        })
+
 
         channelsTable.root = RecursiveTreeItem(channels, RecursiveTreeObject<ChannelData>::getChildren)
         channelsTable.isShowRoot = false
@@ -85,52 +111,15 @@ class MainWindow : View("My View") {
             ReadOnlyObjectWrapper(humanReadableDuration(param.value.value.duration, 0))
         }
 
-        chooser.extensionFilters += FileChooser.ExtensionFilter("MIDI Files", "*.mid", "*.midi", "*.kar")
+        fileChooser.extensionFilters += FileChooser.ExtensionFilter("MIDI Files", "*.mid", "*.midi", "*.kar")
+        playlistChooser.extensionFilters += FileChooser.ExtensionFilter("TRUMP Playlists", "*.trumppl")
 
         playlistTable.onDoubleClick {
-            val pathname = playlistTable.selectedItem?.filename
-            if (pathname != null) {
-                //sequencer.sequence = MidiSystem.getSequence(File(pathname))
-                posLabel.text = "${playlistTable.selectedItem?.position ?: 0} / ${playlist.size}"
-                nameLabel.text = playlistTable.selectedItem?.name ?: ""
-                //playlistTable.selectedItem?.duration = (sequencer.microsecondLength / 1000.0).millis
-                //sequencer.open()
-                //sequencer.start()
-                player.sequence = MidiSystem.getSequence(File(pathname))
-                player.play()
-                //MidiSystem.write(player.sequence, 0, File("C:/test/test.mid"))
-            }
+            playerPlay()
         }
 
-        sequencer.addControllerEventListener( ControllerEventListener {
-            val newBank = if (it.data1 == 0) it.data2 shl 7 else it.data2
-            var newBankNumber = channels[it.channel].bankNumber and (if (it.data1 == 0) 0x00FF else 0xFF00)
-            newBankNumber = newBankNumber or newBank
-            println("Channel ${it.channel+1}: bank ${channels[it.channel].bankNumber} to ${newBankNumber}")
-            channels[it.channel].bankNumber = newBankNumber
-        }, intArrayOf(0, 32))
-
-        sequencer.addMetaEventListener {
-            // stop on end-of-track
-            if (it.type == 47) {
-                sequencer.close()
-            }
-        }
-
-        updateTimer.schedule(object: TimerTask() {
+        updateTimer.schedule(object : TimerTask() {
             override fun run() {
-//                if (sequencer.isRunning) {
-//                    val elapsed = (sequencer.microsecondPosition / 1000.0).millis
-//                    val total = (sequencer.microsecondLength / 1000.0).millis
-//                    val bpm = sequencer.tempoInBPM.toDouble()
-//                    for (c in 0..15) {
-//                        //channels[c].patchNumber = (sequencer as Synthesizer).channels[c].program
-//                    }
-//                    Platform.runLater {
-//                        timeLabel.text = "${humanReadableDuration(elapsed, 1)} / ${humanReadableDuration(total, 3)}"
-//                        bpmLabel.text = "BPM: %5.1f".format(bpm)
-//                    }
-//                }
                 if (player.isPlaying) {
                     val elapsed = (player.mcsPosition / 1000.0).millis
                     val total = (player.sequence!!.microsecondLength / 1000.0).millis
@@ -142,10 +131,28 @@ class MainWindow : View("My View") {
                 }
             }
         }, 100, 100)
+
+        player.addListener {
+            if (it.message is ShortMessage) {
+                val msg = it.message as ShortMessage
+                if (msg.command == ShortMessage.PROGRAM_CHANGE) {
+                    channels[msg.channel].patchNumber = msg.data1 + 1
+                }
+                if (msg.command == ShortMessage.CONTROL_CHANGE) {
+                    when (msg.data1) {
+                        0 -> channels[msg.channel].bankNumber =
+                                (channels[msg.channel].bankNumber and 127) or (msg.data2 * 128)
+                        32 -> channels[msg.channel].bankNumber =
+                                (channels[msg.channel].bankNumber and 16256) or msg.data2
+                    }
+                }
+            }
+            true
+        }
     }
 
     fun playlistAddFiles() {
-        val files = chooser.showOpenMultipleDialog(null)
+        val files = fileChooser.showOpenMultipleDialog(null)
         if (files != null) {
             playlist += List(files.size, { i ->
                 PlaylistEntry(playlist.size + i + 1, files[i].path, files[i].name, Duration.ZERO)
@@ -153,9 +160,101 @@ class MainWindow : View("My View") {
         }
     }
 
+    fun playlistAddFolder() {
+        val folder = directoryChooser.showDialog(null)
+        if (folder != null) {
+            val files = Files.walk(folder.toPath())
+                    .filter { Files.isRegularFile(it) }
+                    .map { it.toFile() }
+                    .filter {
+                        (it.extension in listOf("mid", "midi", "kar"))
+                    }.toList()
+            playlist += List(files.size, { i ->
+                PlaylistEntry(playlist.size + i + 1, files[i].path, files[i].name, Duration.ZERO)
+            })
+            println("Total ${files.size} files")
+        }
+    }
+
+    fun playlistNewList() {
+        playlist.clear()
+    }
+
+    fun playlistLoadList() {
+        val fileToLoad = playlistChooser.showOpenDialog(null)
+        if (!fileToLoad.canRead()) {
+            // TODO: Show error
+            return
+        }
+        val data = Parser().parse(fileToLoad.inputStream())
+        val array = data as JsonArray<JsonObject>
+        playlist.clear()
+        var ind = 1
+        playlist += array.map {
+            PlaylistEntry(ind++, it.string("filename") ?: "",
+                    it.string("name") ?: "", Duration(0.0))
+        }
+    }
+
+    fun playlistSaveList() {
+        val fileToSave = playlistChooser.showSaveDialog(null)
+//        if (!fileToSave.canWrite()) {
+//            // TODO: Show error
+//            val alert = Alert(Alert.AlertType.ERROR)
+//            alert.title = "Cannot write to file"
+//            alert.headerText = "Error"
+//            alert.contentText = "File ${fileToSave.name} is not writable"
+//            alert.showAndWait()
+//            return
+//        }
+        val writer = FileWriter(fileToSave)
+        val array = json {
+            array(playlist.map {
+                obj("filename" to it.filename, "name" to it.name)
+            })
+        }
+        writer.write(array.toJsonString())
+        writer.close()
+    }
+
+    fun playerPlay() {
+        if (playlistTable.selectedItem == null) {
+            playlistTable.selectFirst()
+        }
+        val pathname = playlistTable.selectedItem?.filename
+        if (pathname != null) {
+            posLabel.text = "${playlistTable.selectedItem?.position ?: 0} / ${playlist.size}"
+            nameLabel.text = playlistTable.selectedItem?.name ?: ""
+            playlistTable.selectedItem?.duration = ((player.sequence?.microsecondLength ?: 0) / 1000.0).millis
+            player.sequence = MidiSystem.getSequence(File(pathname))
+            player.play()
+        }
+    }
+
+    fun playerStop() {
+        if (player.isPlaying) {
+            player.stop()
+        }
+    }
+
+
+    fun playerPrev() {
+        playerStop()
+        if (playlistTable.selectionModel.selectedIndex > 0) {
+            playlistTable.selectionModel.selectPrevious()
+            playerPlay()
+        }
+    }
+
+    fun playerNext() {
+        playerStop()
+        if (playlistTable.selectionModel.selectedIndex < playlist.lastIndex) {
+            playlistTable.selectionModel.selectNext()
+            playerPlay()
+        }
+    }
+
     fun cleanup() {
-//        sequencer.stop()
-//        sequencer.close()
         player.stop()
     }
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXSlider?>
 <?import com.jfoenix.controls.JFXTabPane?>
 <?import com.jfoenix.controls.JFXTreeTableColumn?>
 <?import com.jfoenix.controls.JFXTreeTableView?>
@@ -8,38 +9,59 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.hyst329.trump.view.MainWindow">
    <children>
-      <HBox prefHeight="100.0" prefWidth="200.0">
+      <GridPane>
+         <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="60.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" percentWidth="40.0" prefWidth="200.0" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+         </rowConstraints>
          <children>
-            <VBox>
+            <Label fx:id="posLabel" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="123456 / 567890" textAlignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </Label>
+            <Label fx:id="nameLabel" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="test.mid" textAlignment="CENTER" textOverrun="CENTER_ELLIPSIS" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </Label>
+            <Label fx:id="timeLabel" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="1:23.4 / 5:06.789" textAlignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </Label>
+            <Label fx:id="bpmLabel" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="BPM: 120.0" textAlignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.vgrow="ALWAYS">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </Label>
+            <HBox GridPane.columnIndex="1">
                <children>
-                  <Label fx:id="posLabel" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="123456 / 567890" textAlignment="CENTER">
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </Label>
-                  <Label fx:id="nameLabel" layoutX="10.0" layoutY="10.0" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="test.mid" textAlignment="CENTER" textOverrun="CENTER_ELLIPSIS">
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </Label>
-                  <Label fx:id="timeLabel" layoutX="10.0" layoutY="60.0" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="1:23.4 / 5:06.789" textAlignment="CENTER">
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </Label>
-                  <Label fx:id="bpmLabel" layoutX="10.0" layoutY="84.0" prefHeight="100.0" prefWidth="300.0" style="-fx-font-size: 18; -fx-font-weight: bold;" text="BPM: 120.0" textAlignment="CENTER">
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </Label>
+                  <JFXButton onAction="#playerPlay" text="Play / Pause" />
+                  <JFXButton onAction="#playerStop" text="Stop" />
+                  <JFXButton onAction="#playerPrev" text="Prev" />
+                  <JFXButton onAction="#playerNext" text="Next" />
                </children>
-            </VBox>
-         </children></HBox>
+            </HBox>
+            <JFXSlider fx:id="keySlider" blockIncrement="3.0" majorTickUnit="3.0" max="12.0" min="-12.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <JFXSlider fx:id="tempoSlider" blockIncrement="0.05" majorTickUnit="0.25" max="1.0" min="-1.0" minorTickCount="5" showTickLabels="true" showTickMarks="true" value="0.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <JFXSlider fx:id="volumeSlider" majorTickUnit="32.0" max="128.0" minorTickCount="8" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+         </children>
+      </GridPane>
       <JFXTabPane VBox.vgrow="ALWAYS">
          <tabs>
             <Tab text="MIDI">
@@ -75,10 +97,10 @@
                               <HBox prefHeight="100.0" prefWidth="200.0">
                                  <children>
                                     <JFXButton onAction="#playlistAddFiles" text="Add Files" />
-                                    <JFXButton text="Add Folder" />
-                                    <JFXButton text="New List" />
-                                    <JFXButton text="Load List" />
-                                    <JFXButton text="Save List" />
+                                    <JFXButton onAction="#playlistAddFolder" text="Add Folder" />
+                                    <JFXButton onAction="#playlistNewList" text="New List" />
+                                    <JFXButton onAction="#playlistLoadList" text="Load List" />
+                                    <JFXButton onAction="#playlistSaveList" text="Save List" />
                                  </children>
                                  <opaqueInsets>
                                     <Insets />
@@ -97,6 +119,11 @@
                      </children>
                   </AnchorPane>
               </content>
+            </Tab>
+            <Tab text="Settings">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+               </content>
             </Tab>
          </tabs>
       </JFXTabPane>

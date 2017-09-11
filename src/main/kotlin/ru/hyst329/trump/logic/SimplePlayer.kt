@@ -24,6 +24,7 @@ class SimplePlayer(deviceInfo: MidiDevice.Info) {
                 field = s
                 tempoCache = MidiUtils.TempoCache()
                 tempoCache.refresh(field)
+                mcsPosition = 0
             }
         }
     var device: MidiDevice? = null
@@ -83,14 +84,19 @@ class SimplePlayer(deviceInfo: MidiDevice.Info) {
                     }
                     event++
                 }
-                Thread.sleep(1)
+                try {
+                    Thread.sleep(1)
+                } catch (e: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    break
+                }
             }
         }
     }
 
     fun pause() {
         isPlaying = false
-        playThread?.stop() // TODO: Replace with non-deprecated method
+        playThread?.interrupt()
         device?.close()
     }
 

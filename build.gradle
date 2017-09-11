@@ -20,6 +20,7 @@ compileKotlin {
 repositories {
     mavenLocal()
     mavenCentral()
+    jcenter()
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots/"
     }
@@ -29,6 +30,7 @@ dependencies {
     compile 'no.tornado:tornadofx:1.7.9'
     compile 'com.jfoenix:jfoenix:1.8.0'
     testCompile 'junit:junit:4.12'
+    compile 'com.beust:klaxon:0.30'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
 }
 
