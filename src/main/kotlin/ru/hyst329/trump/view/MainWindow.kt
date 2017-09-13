@@ -8,6 +8,8 @@ import com.jfoenix.controls.RecursiveTreeItem
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject
 import javafx.application.Platform
 import javafx.beans.property.ReadOnlyObjectWrapper
+import javafx.beans.value.ChangeListener
+import javafx.beans.value.ObservableValue
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.Label
@@ -28,6 +30,7 @@ import ru.hyst329.trump.logic.SimplePlayer
 import java.io.FileWriter
 import java.nio.file.Files
 import java.util.*
+import kotlin.concurrent.thread
 import kotlin.streams.toList
 
 
@@ -75,8 +78,24 @@ class MainWindow : View("My View") {
             }
 
             override fun fromString(string: String?): Double {
-                return Math.log(string?.toDouble() ?: 0.0)  / Math.log(2.0)
+                return Math.log(string?.toDouble() ?: 0.0) / Math.log(2.0)
             }
+        })
+
+        keySlider.valueProperty().addListener(object : ChangeListener<Number> {
+            override fun changed(observable: ObservableValue<out Number>?, oldValue: Number?, newValue: Number?) {
+                player.allSoundsOff()
+                player.key = newValue?.toInt() ?: 0
+            }
+
+        })
+
+        tempoSlider.valueProperty().addListener(object : ChangeListener<Number> {
+            override fun changed(observable: ObservableValue<out Number>?, oldValue: Number?, newValue: Number?) {
+                player.allSoundsOff()
+                player.tempoFactor = Math.pow(2.0, newValue?.toDouble() ?: 0.0)
+            }
+
         })
 
 
@@ -124,9 +143,11 @@ class MainWindow : View("My View") {
                     val elapsed = (player.mcsPosition / 1000.0).millis
                     val total = (player.sequence!!.microsecondLength / 1000.0).millis
                     val bpm = player.currentTempoBPM
+                    val tf = player.tempoFactor
+                    val effbpm = player.effectiveBPM
                     Platform.runLater {
                         timeLabel.text = "${humanReadableDuration(elapsed, 1)} / ${humanReadableDuration(total, 3)}"
-                        bpmLabel.text = "BPM: %5.1f".format(bpm)
+                        bpmLabel.text = "BPM: %5.1f \u00d7 %4.2f = %5.1f".format(bpm, tf, effbpm)
                     }
                 }
             }
@@ -187,13 +208,18 @@ class MainWindow : View("My View") {
             return
         }
         val data = Parser().parse(fileToLoad.inputStream())
+        println("Loading data finished")
         val array = data as JsonArray<JsonObject>
         playlist.clear()
+
         var ind = 1
-        playlist += array.map {
+        val newList = mutableListOf<PlaylistEntry>()
+        println("Building playlist...")
+        array.mapTo(newList) {
             PlaylistEntry(ind++, it.string("filename") ?: "",
                     it.string("name") ?: "", Duration(0.0))
         }
+        playlist += newList
     }
 
     fun playlistSaveList() {
